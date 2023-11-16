@@ -8,6 +8,7 @@
 
 int score = 0;
 int brick_color = 1, ball_color = 3, level = 0, paddle_color = 2, text_color = 5, size = 1, shapeType = 1;
+bool obstacleEnabled = false;
 GLfloat twoModel[] = {GL_TRUE};
 int game_level[] = {7, 5, 2};
 float rate = game_level[level];
@@ -311,22 +312,27 @@ void draw_bricks()
                         }
                 }
 
-                for (int k = 0; k < 5; k++)
+                if (obstacleEnabled)
                 {
-                        int randomRow = (rand() + rows) % rows - 7;
-                        int randomColumn = rand() % columns + 1;
-                        obstacle_positions[k].x = (GLfloat)(randomColumn * 4 * 0.84);
-                        obstacle_positions[k].y = (GLfloat)(randomRow * 2 * 0.6);
+                        for (int k = 0; k < 5; k++)
+                        {
+                                int randomRow = (rand() + rows) % rows - 7;
+                                int randomColumn = rand() % columns + 1;
+                                obstacle_positions[k].x = (GLfloat)(randomColumn * 4 * 0.84);
+                                obstacle_positions[k].y = (GLfloat)(randomRow * 2 * 0.6);
+                        }
                 }
         }
 
         glPushMatrix();
         glTranslatef(-19.5, 5, 0);
 
-        // Draw obstacles first
-        for (int k = 0; k < 5; k++)
+        if (obstacleEnabled)
         {
-                brick(obstacle_positions[k].x, obstacle_positions[k].y, 0, 1.5, 1, 4);
+                for (int k = 0; k < 5; k++)
+                {
+                        brick(obstacle_positions[k].x, obstacle_positions[k].y, 0, 1.5, 1, 4);
+                }
         }
 
         // Draw regular bricks
@@ -386,10 +392,16 @@ void draw_ball()
 // mouse function
 void mousemotion(int x, int y)
 {
-
         if (start == 1)
         {
-                px = (x - glutGet(GLUT_WINDOW_WIDTH) / 2) / 20;
+                // Calculate the desired position based on the mouse cursor
+                float targetPx = (x - glutGet(GLUT_WINDOW_WIDTH) / 2) / 20;
+
+                // Add some acceleration or damping factor for smoother movement
+                const float acceleration = 0.2; // Adjust as needed
+                px += (targetPx - px) * acceleration;
+
+                // Clamp the paddle position within the game area
                 if (px > 15)
                 {
                         px = 15;
@@ -399,9 +411,11 @@ void mousemotion(int x, int y)
                         px = -15;
                 }
         }
-
         else
+        {
                 glutSetCursor(GLUT_CURSOR_INHERIT);
+        }
+        glutPostRedisplay();
 }
 
 // handle brick color
@@ -452,6 +466,11 @@ void change_brick_shape(int action)
 {
         // Update the shapeType variable based on the selected shape
         shapeType = action;
+}
+
+void toggleObstacles(int action)
+{
+        obstacleEnabled = (action == 1); // Assuming action 1 enables obstacles, and action 0 disables them
 }
 
 // add menu
@@ -506,6 +525,10 @@ void addMenu()
         glutAddMenuEntry("Vertical Bars", 2);
         glutAddMenuEntry("Semi-Circular", 3);
 
+        int submenu8 = glutCreateMenu(toggleObstacles);
+        glutAddMenuEntry("Enable Obstacles", 1);
+        glutAddMenuEntry("Disable Obstacles", 0);
+
         glutCreateMenu(handle_menu);
         glutAddSubMenu("Bricks Color", submenu1);
         glutAddSubMenu("Ball Color", submenu2);
@@ -514,6 +537,7 @@ void addMenu()
         glutAddSubMenu("Difficulty", submenu3);
         glutAddSubMenu("Paddle Size", submenu6);
         glutAddSubMenu("Brick Shape", submenu7);
+        glutAddSubMenu("Toggle Obstacles", submenu8);
         glutAttachMenu(GLUT_RIGHT_BUTTON);
 }
 
@@ -669,24 +693,27 @@ void hit()
                 }
         }
         // Check collision with grey bricks (solid obstacle bricks)
-        for (int k = 0; k < 5; k++)
+        if (obstacleEnabled)
         {
-                if ((bx >= obstacle_positions[k].x - 19.5 - 0.1) && (bx <= obstacle_positions[k].x + 3 - 19.5 + 0.1))
-                {
-                        if (by >= obstacle_positions[k].y + 5 - 0.1 && by <= obstacle_positions[k].y + 5 + 1.2 + 0.1)
-                        {
-                                // Emit particles at the collision point
-
-                                diry = diry * -1;
-                        }
-                }
-                else if (by >= obstacle_positions[k].y + 5 - 0.1 && by <= obstacle_positions[k].y + 5 + 1.2 + 0.1)
+                for (int k = 0; k < 5; k++)
                 {
                         if ((bx >= obstacle_positions[k].x - 19.5 - 0.1) && (bx <= obstacle_positions[k].x + 3 - 19.5 + 0.1))
                         {
-                                // Emit particles at the collision point
+                                if (by >= obstacle_positions[k].y + 5 - 0.1 && by <= obstacle_positions[k].y + 5 + 1.2 + 0.1)
+                                {
+                                        // Emit particles at the collision point
 
-                                dirx = dirx * -1;
+                                        diry = diry * -1;
+                                }
+                        }
+                        else if (by >= obstacle_positions[k].y + 5 - 0.1 && by <= obstacle_positions[k].y + 5 + 1.2 + 0.1)
+                        {
+                                if ((bx >= obstacle_positions[k].x - 19.5 - 0.1) && (bx <= obstacle_positions[k].x + 3 - 19.5 + 0.1))
+                                {
+                                        // Emit particles at the collision point
+
+                                        dirx = dirx * -1;
+                                }
                         }
                 }
         }
