@@ -134,7 +134,7 @@ void draw_paddle()
 }
 
 // Function to draw the inverted triangle-shaped brick
-void drawInvertedTriangleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height)
+void drawInvertedTriangleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height, int isSpcl)
 {
         glDisable(GL_LIGHTING);
 
@@ -154,8 +154,11 @@ void drawInvertedTriangleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, G
         glVertex3f(x + width, y + height, z);
         glEnd();
 
+        int index = brick_color;
+        if (isSpcl)
+            index = (index + 1) % 6;
         // Draw the inner colored part of the brick
-        glColor3fv(brick_color_array[brick_color]);
+        glColor3fv(brick_color_array[index]);
         glBegin(GL_TRIANGLES);
         glVertex3f(x + width / 2, y, z);
         glVertex3f(x, y + height, z);
@@ -166,7 +169,7 @@ void drawInvertedTriangleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, G
 }
 
 // Function to draw the vertical bars-shaped brick
-void drawVerticalBarsBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height)
+void drawVerticalBarsBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height, int isSpcl)
 {
         glDisable(GL_LIGHTING);
 
@@ -193,7 +196,10 @@ void drawVerticalBarsBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLflo
         glEnd();
 
         // Draw the inner colored part of the brick
-        glColor3fv(brick_color_array[brick_color]);
+        int index = brick_color;
+        if (isSpcl)
+            index = (index + 1) % 6;
+        glColor3fv(brick_color_array[index]);
         glBegin(GL_QUADS);
         glVertex3f(x, y, z);
         glVertex3f(x + width, y, z);
@@ -205,7 +211,7 @@ void drawVerticalBarsBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLflo
 }
 
 // Function to draw a semi-circle-shaped brick with borders
-void drawSemiCircleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat radius)
+void drawSemiCircleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat radius, int isSpcl)
 {
         glDisable(GL_LIGHTING);
 
@@ -224,8 +230,11 @@ void drawSemiCircleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat radius)
         }
         glEnd();
 
+        int index = brick_color;
+        if (isSpcl)
+            index = (index + 1) % 6;
         // Draw the inner colored part of the brick
-        glColor3fv(brick_color_array[brick_color]);
+        glColor3fv(brick_color_array[index]);
         glBegin(GL_TRIANGLE_FAN);
         glVertex3f(x, y, z); // Center of the semi-circle
         for (int i = 0; i <= 180; i++)
@@ -277,23 +286,23 @@ void drawSmallGreyBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat 
 }
 
 // Modify the brick function to accept shapeType
-void brick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height, int shapeType)
+void brick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLfloat height, int shapeType, int isSpcl)
 {
         // Call the appropriate shape-drawing function based on shapeType
         switch (shapeType)
         {
-        case 1:
-                drawInvertedTriangleBrick(x, y, z, width, height);
-                break;
-        case 2:
-                drawVerticalBarsBrick(x, y, z, width, height);
-                break;
-        case 3:
-                drawSemiCircleBrick(x, y, z, width / 2); // Adjust the radius as needed
-                break;
-        case 4:
-                drawSmallGreyBrick(x, y, z, width, height);
-                break;
+            case 1:
+                    drawInvertedTriangleBrick(x, y, z, width, height, isSpcl);
+                    break;
+            case 2:
+                    drawVerticalBarsBrick(x, y, z, width, height, isSpcl);
+                    break;
+            case 3:
+                    drawSemiCircleBrick(x, y, z, width / 2, isSpcl); // Adjust the radius as needed
+                    break;
+            case 4:
+                    drawSmallGreyBrick(x, y, z, width, height);
+                    break;
         }
 }
 struct brick_coords obstacle_positions[5];
@@ -332,18 +341,23 @@ void draw_bricks()
         {
                 for (int k = 0; k < 5; k++)
                 {
-                        brick(obstacle_positions[k].x, obstacle_positions[k].y, 0, 1.5, 1, 4);
+                        brick(obstacle_positions[k].x, obstacle_positions[k].y, 0, 1.5, 1, 4, 0);
                 }
         }
-
+        int cnt = 0, spcl = 0;
         // Draw regular bricks
         for (i = 1; i <= rows; i += 1)
         {
                 for (j = 1; j <= columns; j += 1)
                 {
+                        cnt++;
                         if (brick_array[i][j].x != 0 && brick_array[i][j].y != 0)
                         {
-                                brick(brick_array[i][j].x, brick_array[i][j].y, 0, 3, 1.5, shapeType);
+                                if (cnt % 6 == 0)
+                                    spcl = 1;
+                                brick(brick_array[i][j].x, brick_array[i][j].y, 0, 3, 1.5, shapeType, spcl);
+                                if (cnt % 6 == 0)
+                                    spcl = 0;
                         }
                 }
         }
@@ -546,7 +560,7 @@ void addMenu()
 void text(int sc)
 {
         glDisable(GL_LIGHTING);
-        char text[40];
+        char text[50];
         char difficulty[10];
         if (level == 0)
         {
