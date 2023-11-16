@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-// #include<iostream>
-// using namespace std;
 
 int score = 0;
 int gamePaused = 0, playing_and_paused = 0;
@@ -18,6 +16,8 @@ GLfloat brick_color_array[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1
 GLfloat paddle_color_array[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}};
 GLfloat text_color_array[][4] = {{1, 0, 0, 1}, {0, 0, 1, 1}, {0, 1, 0, 1}, {1, 0, 1, 1}, {1, 1, 0, 1}, {0, 1, 1, 1}};
 GLfloat paddle_size[] = {2, 4, 6};
+GLfloat original_paddle_size[] = {2, 4, 6};
+GLfloat ball_size = 1.0; // Set the initial ball size
 // The grid parameters for the bricks
 int rows = 4;
 int columns = 10;
@@ -49,7 +49,54 @@ struct Particle
 
 // Create an array to store particles
 Particle particles[MAX_PARTICLES];
+
+
 int numParticles = 0;
+int PowerUpUsed = 0;
+int powerUpStartTime[6] = {-10000, -10000, -10000, -10000, -10000, -10000};
+
+// Power-up duration in milliseconds (5 seconds)
+#define powerUpDuration 5000
+
+// Function to handle the paddle oscillation power-up effect
+void OscillatePaddleSize() {
+    int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[0];
+    // Check if the power-up duration is within the specified time
+    if (elapsedTime < 5000) {
+        float frequency = 0.002;
+        float amplitude = 2.0;
+
+        float oscillationFactor = sin(elapsedTime * frequency);
+
+        int originalPaddleSize = 4;
+        paddle_size[size] = originalPaddleSize + amplitude * oscillationFactor;
+
+        // Ensure the paddle size stays within the desired range (2 to 6)
+        paddle_size[size] = fmin(6, fmax(2, paddle_size[size]));
+    } else {
+        // Power-up duration expired, reset paddle size to original
+        paddle_size[size] = original_paddle_size[size];
+    }
+}
+
+// Function to handle the ball oscillation power-up effect
+void OscillateBallSize() {
+    int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[1];
+    // Check if the power-up duration is within the specified time
+    if (elapsedTime < 5000) {
+        float frequency = 0.002;
+        float amplitude = 0.5;
+
+        float oscillationFactor = sin(elapsedTime * frequency);
+
+        ball_size = 1.0 + amplitude * oscillationFactor;
+
+        ball_size = fmin(1.5, fmax(0.5, ball_size));
+    } else {
+        // Power-up duration expired, reset ball size to original
+        ball_size = 1.0; // Set the initial ball size
+    }
+}
 
 // Function to emit particles at a specific location
 void emitParticles(GLfloat x, GLfloat y, GLfloat z)
@@ -344,7 +391,7 @@ void draw_bricks()
                         brick(obstacle_positions[k].x, obstacle_positions[k].y, 0, 1.5, 1, 4, 0);
                 }
         }
-        int cnt = 0, spcl = 0;
+        int cnt = 0;
         // Draw regular bricks
         for (i = 1; i <= rows; i += 1)
         {
@@ -353,11 +400,7 @@ void draw_bricks()
                         cnt++;
                         if (brick_array[i][j].x != 0 && brick_array[i][j].y != 0)
                         {
-                                if (cnt % 6 == 0)
-                                    spcl = 1;
-                                brick(brick_array[i][j].x, brick_array[i][j].y, 0, 3, 1.5, shapeType, spcl);
-                                if (cnt % 6 == 0)
-                                    spcl = 0;
+                                brick(brick_array[i][j].x, brick_array[i][j].y, 0, 3, 1.5, shapeType, cnt%6 == 0);
                         }
                 }
         }
@@ -397,8 +440,14 @@ void draw_ball()
 
         glPushMatrix();
         glTranslatef(bx, by, 0);
-        glScalef(1.0, 1.0, 0.5);
-        // glScalef(size[i], size[], size[]);
+        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[1];
+        // Check if the power-up duration is within the specified time
+        if (elapsedTime < 5000) {
+            glScalef(ball_size, ball_size, 0.5);
+        }
+        else
+            glScalef(1.0, 1.0, 0.5);
+
         glutSolidSphere(1.0, 52, 52);
 
         glPopMatrix();
@@ -686,11 +735,12 @@ void keyboard(unsigned char key, int x, int y)
 
 void hit()
 {
-        int i, j;
+        int i, j, cnt = 0;
         for (i = 1; i <= rows; i++)
         {
                 for (j = 1; j <= columns; j++)
                 {
+                        cnt++;
                         if ((bx >= brick_array[i][j].x - 19.5 - 0.1) && (bx <= brick_array[i][j].x + 3 - 19.5 + 0.1))
                         {
                                 if (by >= brick_array[i][j].y + 5 - 0.1 && by <= brick_array[i][j].y + 5 + 1.2 + 0.1)
@@ -701,6 +751,10 @@ void hit()
                                         brick_array[i][j].y = 0;
                                         diry = diry * -1;
                                         score++;
+                                        if (cnt % 6 == 0) {
+                                                powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
+                                                PowerUpUsed++;
+                                        }
                                 }
                         }
                         else if (by >= brick_array[i][j].y + 5 - 0.1 && by <= brick_array[i][j].y + 5 + 1.2 + 0.1)
@@ -713,6 +767,10 @@ void hit()
                                         brick_array[i][j].y = 0;
                                         dirx = dirx * -1;
                                         score++;
+                                        if (cnt % 6 == 0) {
+                                                powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
+                                                PowerUpUsed++;
+                                        }
                                 }
                         }
                 }
@@ -796,7 +854,12 @@ void idle()
                 dirx = 0;
                 diry = 0;
                 px = 0;
+                for (int idx = 0; idx < 6; idx++)
+                        powerUpStartTime[idx] = -10000;
+                PowerUpUsed = 0;
         }
+        OscillatePaddleSize();
+        OscillateBallSize();
         glutPostRedisplay();
     }
 }
