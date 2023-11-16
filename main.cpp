@@ -7,10 +7,11 @@
 // using namespace std;
 
 int score = 0;
+int gamePaused = 0, playing_and_paused = 0;
 int brick_color = 1, ball_color = 3, level = 0, paddle_color = 2, text_color = 5, size = 1, shapeType = 1;
 bool obstacleEnabled = false;
 GLfloat twoModel[] = {GL_TRUE};
-int game_level[] = {7, 5, 2};
+int game_level[] = {50, 20, 10};
 float rate = game_level[level];
 
 GLfloat brick_color_array[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}};
@@ -573,6 +574,8 @@ void text(int sc)
                 diry = 0;
                 px = 0;
         }
+        if (playing_and_paused == 1)
+            sprintf(text,"Difficulty: %s    Your Score: %d    Paused!!",difficulty, sc);
         // The color
         glColor4fv(text_color_array[text_color]);
         // Position of the text to be printer
@@ -624,24 +627,29 @@ void keyboard(unsigned char key, int x, int y)
 {
         switch (key)
         {
-        case 'd':
-                px += 3;
-                break;
-        case 'a':
-                px -= 3;
-                break;
-        case 'q':
-                exit(0);
-                break;
-        case 's':
-                if (!start)
-                {
-                        dirx = diry = 1;
-                        rate = game_level[level];
-                        start = 1;
-                        score = 0;
-                        glutSetCursor(GLUT_CURSOR_NONE);
-                }
+            case 'd':
+                    px += 3;
+                    break;
+            case 'a':
+                    px -= 3;
+                    break;
+            case 'q':
+                    exit(0);
+                    break;
+            case 's':
+                    if (!start)
+                    {
+                            dirx = diry = 1;
+                            rate = game_level[level];
+                            start = 1;
+                            score = 0;
+                            glutSetCursor(GLUT_CURSOR_NONE);
+                    }
+                    break;
+            case ' ':
+                // Toggle the game state (play/pause) when the space bar is pressed
+                gamePaused = !gamePaused;
+                playing_and_paused = !playing_and_paused;
                 break;
         }
         if (px > 15)
@@ -656,7 +664,10 @@ void keyboard(unsigned char key, int x, int y)
         {
                 px = 0;
         }
-        glutPostRedisplay();
+        // If the game is not paused, update the display
+        if (!gamePaused) {
+            glutPostRedisplay();
+        }
 }
 
 void hit()
@@ -722,6 +733,7 @@ void hit()
 // The idle function. Handles the motion of the ball along with rebounding from various surfaces
 void idle()
 {
+    if (!gamePaused) {
         hit();
         if (bx < -16 || bx > 16 && start == 1)
         {
@@ -772,6 +784,7 @@ void idle()
                 px = 0;
         }
         glutPostRedisplay();
+    }
 }
 
 int main(int argc, char **argv)
