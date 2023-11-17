@@ -98,6 +98,7 @@ void OscillateBallSize() {
     }
 }
 
+
 // Function to emit particles at a specific location
 void emitParticles(GLfloat x, GLfloat y, GLfloat z)
 {
@@ -420,7 +421,7 @@ void draw_ball()
         GLfloat diffuse2[] = {1, 1, 1};
         GLfloat specular2[] = {0, 1, 1};
 
-        float materialColours[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}};
+        float materialColours[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}, {0.2, 0.2, 0.2}};
         GLfloat matAmbient1[] = {1, 1, 1};
         GLfloat matDiffuse1[] = {1, 1, 1};
         GLfloat matSpecular1[] = {1, 1, 1};
@@ -436,13 +437,21 @@ void draw_ball()
         glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse2);
 
         glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
-        glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, materialColours[ball_color]);
+
+        // Heavy ball powerup
+        int elapsedTime1 = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
+        if (elapsedTime1 < powerUpDuration) {
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, materialColours[6]);
+        }
+        else
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, materialColours[ball_color]);
 
         glPushMatrix();
         glTranslatef(bx, by, 0);
+
+        // Osicllating ball powerup
         int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[1];
-        // Check if the power-up duration is within the specified time
-        if (elapsedTime < 5000) {
+        if (elapsedTime < powerUpDuration) {
             glScalef(ball_size, ball_size, 0.5);
         }
         else
@@ -749,7 +758,13 @@ void hit()
                                         emitParticles(bx, by, 0);
                                         brick_array[i][j].x = 0;
                                         brick_array[i][j].y = 0;
-                                        diry = diry * -1;
+                                        // Heavy ball powerup
+                                        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
+                                        if (elapsedTime < powerUpDuration) {
+                                            // do nothing
+                                        }
+                                        else
+                                            diry = diry * -1;
                                         score++;
                                         if (cnt % 6 == 0) {
                                                 powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
@@ -765,7 +780,12 @@ void hit()
                                         emitParticles(bx, by, 0);
                                         brick_array[i][j].x = 0;
                                         brick_array[i][j].y = 0;
-                                        dirx = dirx * -1;
+                                        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
+                                        if (elapsedTime < powerUpDuration) {
+                                            // do nothing
+                                        }
+                                        else
+                                            dirx = dirx * -1;
                                         score++;
                                         if (cnt % 6 == 0) {
                                                 powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
