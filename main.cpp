@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <algorithm>
+using namespace std;
 
 int score = 0;
 int gamePaused = 0, playing_and_paused = 0;
@@ -788,6 +790,20 @@ void hit()
                                             if (cnt % PowerCount == 0) {
                                                     powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
                                                     PowerUpUsed++;
+                                                    if (PowerUpUsed == 1) {
+                                                        for (int r = max(1, i-1); r <= min(rows, i+1); r++) {
+                                                            for (int c = max(1, j-1); c <= min(columns, j+1); c++) {
+                                                                // complete this loop to destroy a box zone when specific brick is hit
+                                                                if (brick_array[r][c].x > 0) {
+                                                                    // Emit particles at the collision point
+                                                                    emitParticles(brick_array[r][c].x + 19.5, brick_array[r][c].y + 5, 0);
+                                                                    // Destroy the brick at position (r, c)
+                                                                    brick_array[r][c].x = 0;
+                                                                    brick_array[r][c].y = 0;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                     PowerUpUsed %= 6;
                                             }
                                         }
@@ -814,6 +830,20 @@ void hit()
                                             if (cnt % PowerCount == 0) {
                                                     powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
                                                     PowerUpUsed++;
+                                                    if (PowerUpUsed == 1) {
+                                                        for (int r = max(1, i-1); r <= min(rows, i+1); r++) {
+                                                            for (int c = max(1, j-1); c <= min(columns, j+1); c++) {
+                                                                // complete this loop to destroy a box zone when specific brick is hit
+                                                                if (brick_array[r][c].x > 0) {
+                                                                    // Emit particles at the collision point
+                                                                    emitParticles(brick_array[r][c].x + 19.5, brick_array[r][c].y + 5, 0);
+                                                                    // Destroy the brick at position (r, c)
+                                                                    brick_array[r][c].x = 0;
+                                                                    brick_array[r][c].y = 0;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
                                                     PowerUpUsed %= 6;
                                             }
                                         }
