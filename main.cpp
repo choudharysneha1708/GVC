@@ -644,7 +644,7 @@ void addMenu()
 void text(int sc)
 {
         glDisable(GL_LIGHTING);
-        char text[50];
+        char text[500];
         char difficulty[10];
         if (level == 0)
         {
@@ -682,8 +682,71 @@ void text(int sc)
         glRasterPos3f(0, 0, 20);
         for (int i = 0; text[i] != '\0'; i++)
                 glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
-        glEnable(GL_LIGHTING);
         glPopMatrix();
+
+        // Power-up is active, render the announcement
+        glColor4f(1.0, 1.0, 0.0, 1.0);  // Shining yellow color
+        glPushMatrix();
+        glTranslatef(-1, 0, 0);
+        // Initialize an empty string
+        sprintf(text, "");
+        int sz = 0;
+
+        // Check if a power-up is active
+        int elapsedTimePowerUp = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[0];
+        if (elapsedTimePowerUp < powerUpDuration)
+        {
+            strcat(text, "Oscillating Paddle");
+            sz += 18;
+        }
+        elapsedTimePowerUp = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[1];
+        if (elapsedTimePowerUp < powerUpDuration)
+        {
+            if (sz > 0) {
+                strcat(text, " | ");
+                sz += 3;
+            }
+            strcat(text, "Oscillating Ball");
+            sz += 16;
+        }
+        elapsedTimePowerUp = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
+        if (elapsedTimePowerUp < powerUpDuration)
+        {
+            if (sz > 0) {
+                strcat(text, " | ");
+                sz += 3;
+            }
+            strcat(text, "Heavy Ball");
+            sz += 10;
+        }
+        elapsedTimePowerUp = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[3];
+        if (elapsedTimePowerUp < powerUpDuration)
+        {
+            if (sz > 0) {
+                strcat(text, " | ");
+                sz += 3;
+            }
+            strcat(text, "Indestructible Bricks");
+            sz += 21;
+        }
+        if (powerUpStartTime[4] > 0)
+        {
+            if (sz > 0) {
+                strcat(text, " | ");
+                sz += 3;
+            }
+            strcat(text, "Extra Life Available");
+            sz += 20;
+        }
+
+        float xPos = -sz * 0.039 / 2.0;
+        glRasterPos3f(xPos, -0.29, 18);  // Adjust the position as needed
+
+        for (int i = 0; text[i] != '\0'; i++)
+            glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, text[i]);
+        glPopMatrix();
+
+        glEnable(GL_LIGHTING);
 }
 
 // The main display function
@@ -795,6 +858,7 @@ void hit()
                                                             for (int c = max(1, j-1); c <= min(columns, j+1); c++) {
                                                                 // complete this loop to destroy a box zone when specific brick is hit
                                                                 if (brick_array[r][c].x > 0) {
+                                                                    score++;
                                                                     // Emit particles at the collision point
                                                                     emitParticles(brick_array[r][c].x + 19.5, brick_array[r][c].y + 5, 0);
                                                                     // Destroy the brick at position (r, c)
@@ -835,6 +899,7 @@ void hit()
                                                             for (int c = max(1, j-1); c <= min(columns, j+1); c++) {
                                                                 // complete this loop to destroy a box zone when specific brick is hit
                                                                 if (brick_array[r][c].x > 0) {
+                                                                    score++;
                                                                     // Emit particles at the collision point
                                                                     emitParticles(brick_array[r][c].x + 19.5, brick_array[r][c].y + 5, 0);
                                                                     // Destroy the brick at position (r, c)
