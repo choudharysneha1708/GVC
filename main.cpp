@@ -900,15 +900,21 @@ void idle()
         }
         else if (by < -13)
         {
-                start = 0;
-                by = -12.8;
-                bx = 0;
-                dirx = 0;
-                diry = 0;
-                px = 0;
-                for (int idx = 0; idx < 6; idx++)
-                        powerUpStartTime[idx] = -10000;
-                PowerUpUsed = 0;
+                if (powerUpStartTime[4] > 0) {
+                    powerUpStartTime[4] = -10000;
+                    diry = 1;
+                }
+                else {
+                    start = 0;
+                    by = -12.8;
+                    bx = 0;
+                    dirx = 0;
+                    diry = 0;
+                    px = 0;
+                    for (int idx = 0; idx < 6; idx++)
+                            powerUpStartTime[idx] = -10000;
+                    PowerUpUsed = 0;
+                }
         }
         OscillatePaddleSize();
         OscillateBallSize();
