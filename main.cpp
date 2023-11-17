@@ -11,8 +11,9 @@ bool obstacleEnabled = false;
 GLfloat twoModel[] = {GL_TRUE};
 int game_level[] = {50, 20, 10};
 float rate = game_level[level];
+int PowerCount = 6;
 
-GLfloat brick_color_array[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}};
+GLfloat brick_color_array[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}, {1, 1, 1}};
 GLfloat paddle_color_array[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}};
 GLfloat text_color_array[][4] = {{1, 0, 0, 1}, {0, 0, 1, 1}, {0, 1, 0, 1}, {1, 0, 1, 1}, {1, 1, 0, 1}, {0, 1, 1, 1}};
 GLfloat paddle_size[] = {2, 4, 6};
@@ -206,7 +207,12 @@ void drawInvertedTriangleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, G
         if (isSpcl)
             index = (index + 1) % 6;
         // Draw the inner colored part of the brick
-        glColor3fv(brick_color_array[index]);
+        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[3];
+        if (elapsedTime < powerUpDuration) {
+            glColor3fv(brick_color_array[6]);
+        }
+        else
+            glColor3fv(brick_color_array[index]);
         glBegin(GL_TRIANGLES);
         glVertex3f(x + width / 2, y, z);
         glVertex3f(x, y + height, z);
@@ -247,7 +253,12 @@ void drawVerticalBarsBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat width, GLflo
         int index = brick_color;
         if (isSpcl)
             index = (index + 1) % 6;
-        glColor3fv(brick_color_array[index]);
+        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[3];
+        if (elapsedTime < powerUpDuration) {
+            glColor3fv(brick_color_array[6]);
+        }
+        else
+            glColor3fv(brick_color_array[index]);
         glBegin(GL_QUADS);
         glVertex3f(x, y, z);
         glVertex3f(x + width, y, z);
@@ -282,7 +293,12 @@ void drawSemiCircleBrick(GLfloat x, GLfloat y, GLfloat z, GLfloat radius, int is
         if (isSpcl)
             index = (index + 1) % 6;
         // Draw the inner colored part of the brick
-        glColor3fv(brick_color_array[index]);
+        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[3];
+        if (elapsedTime < powerUpDuration) {
+            glColor3fv(brick_color_array[6]);
+        }
+        else
+            glColor3fv(brick_color_array[index]);
         glBegin(GL_TRIANGLE_FAN);
         glVertex3f(x, y, z); // Center of the semi-circle
         for (int i = 0; i <= 180; i++)
@@ -393,6 +409,9 @@ void draw_bricks()
                 }
         }
         int cnt = 0;
+        int bit = rand() % 2;
+        if (bit == 1)
+            PowerCount = 4;
         // Draw regular bricks
         for (i = 1; i <= rows; i += 1)
         {
@@ -401,7 +420,7 @@ void draw_bricks()
                         cnt++;
                         if (brick_array[i][j].x != 0 && brick_array[i][j].y != 0)
                         {
-                                brick(brick_array[i][j].x, brick_array[i][j].y, 0, 3, 1.5, shapeType, cnt%6 == 0);
+                                brick(brick_array[i][j].x, brick_array[i][j].y, 0, 3, 1.5, shapeType, cnt%PowerCount == 0);
                         }
                 }
         }
@@ -421,7 +440,7 @@ void draw_ball()
         GLfloat diffuse2[] = {1, 1, 1};
         GLfloat specular2[] = {0, 1, 1};
 
-        float materialColours[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}, {0.2, 0.2, 0.2}};
+        float materialColours[][3] = {{1, 0, 0}, {0, 0, 1}, {0, 1, 0}, {1, 0, 1}, {1, 1, 0}, {0, 1, 1}, {0.2, 0.2, 0.2}, {1, 1, 1}};
         GLfloat matAmbient1[] = {1, 1, 1};
         GLfloat matDiffuse1[] = {1, 1, 1};
         GLfloat matSpecular1[] = {1, 1, 1};
@@ -438,9 +457,14 @@ void draw_ball()
 
         glMaterialfv(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
 
-        // Heavy ball powerup
         int elapsedTime1 = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
-        if (elapsedTime1 < powerUpDuration) {
+        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[3];
+        if (elapsedTime < powerUpDuration) {
+            // Indestructive bricks
+            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, materialColours[7]);
+        }
+        else if (elapsedTime1 < powerUpDuration) {
+            // Heavy ball powerup
             glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, materialColours[6]);
         }
         else
@@ -450,7 +474,7 @@ void draw_ball()
         glTranslatef(bx, by, 0);
 
         // Osicllating ball powerup
-        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[1];
+        elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[1];
         if (elapsedTime < powerUpDuration) {
             glScalef(ball_size, ball_size, 0.5);
         }
@@ -754,43 +778,51 @@ void hit()
                         {
                                 if (by >= brick_array[i][j].y + 5 - 0.1 && by <= brick_array[i][j].y + 5 + 1.2 + 0.1)
                                 {
-                                        // Emit particles at the collision point
-                                        emitParticles(bx, by, 0);
-                                        brick_array[i][j].x = 0;
-                                        brick_array[i][j].y = 0;
+                                        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[3];
+                                        if (elapsedTime >= powerUpDuration) {
+                                            // Emit particles at the collision point
+                                            emitParticles(bx, by, 0);
+                                            brick_array[i][j].x = 0;
+                                            brick_array[i][j].y = 0;
+                                            score++;
+                                            if (cnt % PowerCount == 0) {
+                                                    powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
+                                                    PowerUpUsed++;
+                                                    PowerUpUsed %= 6;
+                                            }
+                                        }
                                         // Heavy ball powerup
-                                        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
+                                        elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
                                         if (elapsedTime < powerUpDuration) {
                                             // do nothing
                                         }
                                         else
                                             diry = diry * -1;
-                                        score++;
-                                        if (cnt % 6 == 0) {
-                                                powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
-                                                PowerUpUsed++;
-                                        }
                                 }
                         }
                         else if (by >= brick_array[i][j].y + 5 - 0.1 && by <= brick_array[i][j].y + 5 + 1.2 + 0.1)
                         {
                                 if ((bx >= brick_array[i][j].x - 19.5 - 0.1) && (bx <= brick_array[i][j].x + 3 - 19.5 + 0.1))
                                 {
-                                        // Emit particles at the collision point
-                                        emitParticles(bx, by, 0);
-                                        brick_array[i][j].x = 0;
-                                        brick_array[i][j].y = 0;
-                                        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
+                                        int elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[3];
+                                        if (elapsedTime >= powerUpDuration) {
+                                            // Emit particles at the collision point
+                                            emitParticles(bx, by, 0);
+                                            brick_array[i][j].x = 0;
+                                            brick_array[i][j].y = 0;
+                                            score++;
+                                            if (cnt % PowerCount == 0) {
+                                                    powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
+                                                    PowerUpUsed++;
+                                                    PowerUpUsed %= 6;
+                                            }
+                                        }
+                                        elapsedTime = glutGet(GLUT_ELAPSED_TIME) - powerUpStartTime[2];
                                         if (elapsedTime < powerUpDuration) {
                                             // do nothing
                                         }
                                         else
                                             dirx = dirx * -1;
-                                        score++;
-                                        if (cnt % 6 == 0) {
-                                                powerUpStartTime[PowerUpUsed] = glutGet(GLUT_ELAPSED_TIME);
-                                                PowerUpUsed++;
-                                        }
                                 }
                         }
                 }
@@ -888,8 +920,8 @@ int main(int argc, char **argv)
 {
         glutInit(&argc, argv);
         glutInitDisplayMode(GLUT_DOUBLE | GLUT_DEPTH);
-        glutInitWindowSize(900, 900);
-        glutInitWindowPosition(100, 100);
+        glutInitWindowSize(1000, 1000);
+        glutInitWindowPosition(0, 0);
         glutCreateWindow("Brick Breaker");
         glutDisplayFunc(display);
         glutReshapeFunc(reshape);
