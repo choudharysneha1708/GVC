@@ -47,7 +47,7 @@ void initializeStars()
 void drawStars()
 {
         glColor3f(1.0, 1.0, 1.0); // Set color to white for stars
-        glPointSize(1.0);         // Set the point size
+        glPointSize(2.0);         // Set the point size
 
         glBegin(GL_POINTS);
         for (int i = 0; i < numStars; ++i)
